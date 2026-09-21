@@ -1,0 +1,29 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: obs-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: obs-node-exporter
+    # 不做宿主 / 的 bind 挂载：Docker Desktop 下 "/" 不是 shared/slave mount，
+    # 挂 /host 会让容器直接启动失败。这里用容器自身可见的指标即可满足契约验证。
+    ports:
+      - "9100:9100"
+
+volumes:
+  prometheus-data:
+
+networks:
+  default:
+    name: observability

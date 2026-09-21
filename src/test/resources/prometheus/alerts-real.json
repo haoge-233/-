@@ -1,0 +1,106 @@
+{
+  "status": "success",
+  "data": {
+    "alerts": [
+      {
+        "labels": {
+          "alertname": "HighMemoryUsage",
+          "instance": "node-exporter:9100",
+          "job": "node",
+          "service": "order-service",
+          "severity": "critical"
+        },
+        "annotations": {
+          "description": "实例 node-exporter:9100 内存使用率超过 5%，当前值 23.82%。"
+        },
+        "state": "firing",
+        "activeAt": "2026-09-21T07:03:01.186181956Z",
+        "value": "2.3822435730553128e+01"
+      },
+      {
+        "labels": {
+          "alertname": "HighDiskUsage",
+          "device": "/dev/sdd",
+          "fstype": "ext4",
+          "instance": "node-exporter:9100",
+          "job": "node",
+          "mountpoint": "/etc/hostname",
+          "service": "user-service",
+          "severity": "warning"
+        },
+        "annotations": {
+          "description": "实例 node-exporter:9100 挂载点 /etc/hostname 磁盘使用率超过 1%，当前值 5.586%。"
+        },
+        "state": "firing",
+        "activeAt": "2026-09-21T07:03:01.186181956Z",
+        "value": "5.585717947413171e+00"
+      },
+      {
+        "labels": {
+          "alertname": "HighDiskUsage",
+          "device": "/dev/sdd",
+          "fstype": "ext4",
+          "instance": "node-exporter:9100",
+          "job": "node",
+          "mountpoint": "/etc/hosts",
+          "service": "user-service",
+          "severity": "warning"
+        },
+        "annotations": {
+          "description": "实例 node-exporter:9100 挂载点 /etc/hosts 磁盘使用率超过 1%，当前值 5.586%。"
+        },
+        "state": "firing",
+        "activeAt": "2026-09-21T07:03:01.186181956Z",
+        "value": "5.585717947413171e+00"
+      },
+      {
+        "labels": {
+          "alertname": "HighDiskUsage",
+          "device": "/dev/sdd",
+          "fstype": "ext4",
+          "instance": "node-exporter:9100",
+          "job": "node",
+          "mountpoint": "/etc/resolv.conf",
+          "service": "user-service",
+          "severity": "warning"
+        },
+        "annotations": {
+          "description": "实例 node-exporter:9100 挂载点 /etc/resolv.conf 磁盘使用率超过 1%，当前值 5.586%。"
+        },
+        "state": "firing",
+        "activeAt": "2026-09-21T07:03:01.186181956Z",
+        "value": "5.585717947413171e+00"
+      },
+      {
+        "labels": {
+          "alertname": "SlowResponse",
+          "instance": "localhost:9090",
+          "job": "prometheus",
+          "service": "user-service",
+          "severity": "warning"
+        },
+        "annotations": {
+          "description": "job=prometheus 已持续运行超过 30 秒，作为响应时间类告警的链路验证样例。"
+        },
+        "state": "firing",
+        "activeAt": "2026-09-21T07:02:41.186181956Z",
+        "value": "2.8398600006103516e+02"
+      },
+      {
+        "labels": {
+          "alertname": "ServiceUnavailable",
+          "instance": "node-exporter:9100",
+          "job": "node",
+          "service": "gateway-service",
+          "severity": "critical"
+        },
+        "annotations": {
+          "description": "目标 node-exporter:9100 在线（up=1），用于验证服务可用性类告警的字段完整性。"
+        },
+        "state": "firing",
+        "activeAt": "2026-09-21T07:03:01.186181956Z",
+        "value": "1e+00"
+      }
+    ]
+  }
+}

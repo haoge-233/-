@@ -1,0 +1,50 @@
+groups:
+  - name: superbizagent-alerts
+    rules:
+      # 规则名与 aiops-docs 里的告警类型对齐，表达式全部基于 node_exporter 真实主机指标。
+      # 阈值刻意放到极低，目的是让告警在这台开发机上真的进入 firing 状态，
+      # 从而让 /api/v1/alerts 返回结构完整的真实响应；生产环境应按实际容量重设阈值。
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 1
+        for: 10s
+        labels:
+          severity: warning
+          service: payment-service
+        annotations:
+          description: "实例 {{ $labels.instance }} 的 CPU 使用率近 1 分钟均值已超过 1%，当前值 {{ $value | humanize }}%。"
+
+      - alert: HighMemoryUsage
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 5
+        for: 10s
+        labels:
+          severity: critical
+          service: order-service
+        annotations:
+          description: "实例 {{ $labels.instance }} 内存使用率超过 5%，当前值 {{ $value | humanize }}%。"
+
+      - alert: HighDiskUsage
+        expr: (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|fuseblk"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|fuseblk"}) * 100 > 1
+        for: 10s
+        labels:
+          severity: warning
+          service: user-service
+        annotations:
+          description: "实例 {{ $labels.instance }} 挂载点 {{ $labels.mountpoint }} 磁盘使用率超过 1%，当前值 {{ $value | humanize }}%。"
+
+      - alert: SlowResponse
+        expr: time() - process_start_time_seconds{job="prometheus"} > 30
+        for: 10s
+        labels:
+          severity: warning
+          service: user-service
+        annotations:
+          description: "job={{ $labels.job }} 已持续运行超过 30 秒，作为响应时间类告警的链路验证样例。"
+
+      - alert: ServiceUnavailable
+        expr: up{job="node"} == 1
+        for: 10s
+        labels:
+          severity: critical
+          service: gateway-service
+        annotations:
+          description: "目标 {{ $labels.instance }} 在线（up=1），用于验证服务可用性类告警的字段完整性。"

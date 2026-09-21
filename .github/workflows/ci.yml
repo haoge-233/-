@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # 测试刻意设计为不依赖网络、Milvus 和任何真实密钥；
+      # 这里显式清空凭据环境变量，一旦有人引入需要外部服务才能跑的测试，CI 会立刻失败而不是悄悄跳过
+      - name: Run tests (offline, no credentials)
+        env:
+          DASHSCOPE_API_KEY: ""
+          TOKENRHYTHM_API_KEY: ""
+        run: mvn -B test
+
+      - name: Package
+        run: mvn -B -DskipTests package
+
+      # 防止本次修复回退：明文密钥一旦回到源码或构建产物就阻断构建
+      - name: Guard against committed secrets
+        run: |
+          set -e
+          PATTERNS='sk_tr_[A-Za-z0-9_-]{20,}|sk-ws-[A-Za-z0-9._-]{30,}'
+          echo "--- 检查源码与配置 ---"
+          if grep -rIE "$PATTERNS" --exclude-dir=.git --exclude-dir=target \
+              --exclude=local-env.sh --exclude='*-real.json' \
+              src pom.xml README.md Makefile *.yml 2>/dev/null; then
+            echo "::error::检测到明文 API Key，请改用环境变量注入"
+            exit 1
+          fi
+          echo "--- 检查构建产物 ---"
+          unzip -p target/*.jar BOOT-INF/classes/application.yml > /tmp/app.yml
+          if grep -IE "$PATTERNS" /tmp/app.yml; then
+            echo "::error::jar 内的 application.yml 含明文密钥"
+            exit 1
+          fi
+          echo "未发现明文密钥"
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: super-biz-agent
+          path: target/*.jar
+          if-no-files-found: error
