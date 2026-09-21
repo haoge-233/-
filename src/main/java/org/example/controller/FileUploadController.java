@@ -43,8 +43,13 @@ public class FileUploadController {
         }
 
         // 只取文件名部分：客户端可以在 multipart 的 filename 里塞路径（如 ../../x.md），
-        // 直接 resolve 再 normalize 会把文件写到 uploads 目录之外
-        String safeFilename = Paths.get(originalFilename).getFileName().toString();
+        // 直接 resolve 再 normalize 会把文件写到 uploads 目录之外。
+        // 分隔符不能交给 Paths.get 判断——它只认当前平台的那一种：Windows 会把
+        // "..\..\win.md" 拆成 win.md，Linux 则视其为一个整体文件名，导致同一份上传
+        // 在两个平台上结果不同。先统一成 '/' 再按字符串取最后一段，行为与平台无关。
+        String normalized = originalFilename.replace('\\', '/');
+        int lastSep = normalized.lastIndexOf('/');
+        String safeFilename = lastSep >= 0 ? normalized.substring(lastSep + 1) : normalized;
         if (safeFilename.isEmpty() || safeFilename.contains("..")) {
             return ResponseEntity.badRequest().body("非法的文件名");
         }

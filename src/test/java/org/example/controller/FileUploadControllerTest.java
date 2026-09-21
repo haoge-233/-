@@ -88,6 +88,17 @@ class FileUploadControllerTest {
     }
 
     @Test
+    void windows绝对路径不会留下带反斜杠的文件名() throws Exception {
+        mockMvc.perform(multipart("/api/upload").file(file("C:\\Users\\victim\\Desktop\\note.md", "x")))
+                .andExpect(status().isOk());
+
+        // Linux 上反斜杠是合法文件名字符：不先归一化分隔符就会真的创建出这个怪文件，
+        // 只有在 Windows 上才会碰巧被 Paths.get 剥掉
+        assertThat(uploadDir.resolve("C:\\Users\\victim\\Desktop\\note.md")).doesNotExist();
+        assertThat(uploadDir.resolve("note.md")).exists();
+    }
+
+    @Test
     void 白名单外扩展名被拒绝() throws Exception {
         mockMvc.perform(multipart("/api/upload").file(file("payload.sh", "rm -rf /")))
                 .andExpect(status().isBadRequest());
