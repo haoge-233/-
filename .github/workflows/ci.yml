@@ -22,11 +22,24 @@ jobs:
 
       # 测试刻意设计为不依赖网络、Milvus 和任何真实密钥；
       # 这里显式清空凭据环境变量，一旦有人引入需要外部服务才能跑的测试，CI 会立刻失败而不是悄悄跳过
-      - name: Run tests (offline, no credentials)
+      - name: Run tests (no credentials)
         env:
           DASHSCOPE_API_KEY: ""
           TOKENRHYTHM_API_KEY: ""
-        run: mvn -B test
+        run: |
+          set +e
+          mvn -B test > mvn-test.log 2>&1
+          rc=$?
+          [ $rc -eq 0 ] && exit 0
+          # Actions 的日志区域是虚拟化的，外部工具很难读取；注解面板可以，
+          # 所以失败时把关键行逐条写成注解，让 CI 失败原因在页面上直接可见
+          grep -E '^\[ERROR\]' mvn-test.log | head -15 | while IFS= read -r line; do
+            printf '::error::%s\n' "$(printf %s "$line" | sed 's/%/%25/g')"
+          done
+          [ "$(grep -cE '^\[ERROR\]' mvn-test.log)" -eq 0 ] && \
+            printf '::error::no [ERROR] lines; tail: %s\n' \
+              "$(tail -c 900 mvn-test.log | tr '\n' ' ' | sed 's/%/%25/g')"
+          exit $rc
 
       - name: Package
         run: mvn -B -DskipTests package
